@@ -61,8 +61,28 @@ kubectl -n trendradar port-forward svc/trendradar 3333:3333   # MCP: http://loca
 Sau khi sửa, chạy lại `kubectl apply -k .`. Kustomize thêm hash vào tên ConfigMap/Secret
 nên pod sẽ tự khởi động lại với cấu hình mới.
 
-Các file trong `config/` được sao chép nguyên bản từ upstream (v6.11.0, nguồn tin tiếng Trung,
-`app.timezone: Asia/Shanghai`). Đổi `timezone` trong `config.yaml` nếu muốn giờ hiển thị theo Việt Nam.
+### Cấu hình hiện tại: tin hot bằng tiếng Việt
+
+Các file trong `config/` lấy từ upstream v6.11.0, đã chỉnh như sau:
+
+- **Chủ đề:** AI, thương mại điện tử, ẩm thực, học tập/giáo dục, đời sống, công nghệ tiêu dùng.
+  - `filter.method: "ai"`: AI đọc `config/ai_interests.txt` (viết bằng tiếng Việt) để lọc tin.
+    Muốn thêm/bớt chủ đề thì sửa file đó.
+  - `config/frequency_words.txt`: bộ từ khoá dự phòng (Trung/Việt/Anh) cho cùng 5 nhóm,
+    dùng khi đổi `filter.method` về `"keyword"` (không tốn token) và cho công cụ MCP `get_trending_topics`.
+- **Dịch:** `ai_translation.language: "Tiếng Việt"`, dịch cả tiêu đề hot list (`scope.hotlist: true`) lẫn RSS.
+- **Phân tích AI:** `ai_analysis.language: "Vietnamese"`, có tính cả tin RSS.
+- **Nguồn tin:** giữ các hot list Trung Quốc (Weibo, Douyin, Zhihu, Baidu…), thêm RSS VnExpress
+  (Số hóa, Kinh doanh, Giáo dục, Đời sống, Du lịch, Sức khỏe), Tuổi Trẻ (Nhịp sống số, Giáo dục),
+  TechCrunch (AI, E-commerce), The Verge AI, Hacker News.
+- **Múi giờ:** `app.timezone: Asia/Ho_Chi_Minh`.
+
+**Bắt buộc có AI key** cho lọc AI, dịch và phân tích: điền `AI_API_KEY` (và `AI_MODEL`,
+`AI_API_BASE` nếu không dùng DeepSeek mặc định) trong `secret.env`. Không có key thì đặt
+`filter.method: "keyword"` và tắt `ai_translation.enabled` / `ai_analysis.enabled`.
+
+Giao diện dashboard (chữ cố định trong HTML của TrendRadar) vẫn là tiếng Trung;
+chỉ nội dung tin và phân tích là tiếng Việt.
 
 ## Basic auth
 

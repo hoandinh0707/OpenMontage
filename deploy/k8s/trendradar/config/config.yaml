@@ -17,7 +17,7 @@ app:
   #   - America/New_York (美东时间 UTC-5/-4)
   #   - Europe/London (伦敦时间 UTC+0/+1)
   # 完整时区列表: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-  timezone: "Asia/Shanghai"
+  timezone: "Asia/Ho_Chi_Minh"
   show_version_update: true           # 是否显示版本更新提示（true=显示, false=隐藏）
 
 
@@ -127,19 +127,45 @@ rss:
   # - 正整数：覆盖全局设置，只推送此天数内的文章
   # - 0：禁用此频道的新鲜度过滤，推送所有文章
   feeds:
+    # ── Tiếng Việt ──────────────────────────────────────────
+    - id: "vnexpress-so-hoa"
+      name: "VnExpress Số hóa"
+      url: "https://vnexpress.net/rss/so-hoa.rss"
+    - id: "vnexpress-kinh-doanh"
+      name: "VnExpress Kinh doanh"
+      url: "https://vnexpress.net/rss/kinh-doanh.rss"
+    - id: "vnexpress-giao-duc"
+      name: "VnExpress Giáo dục"
+      url: "https://vnexpress.net/rss/giao-duc.rss"
+    - id: "vnexpress-doi-song"
+      name: "VnExpress Đời sống"
+      url: "https://vnexpress.net/rss/doi-song.rss"
+    - id: "vnexpress-du-lich"
+      name: "VnExpress Du lịch (ẩm thực)"
+      url: "https://vnexpress.net/rss/du-lich.rss"
+    - id: "vnexpress-suc-khoe"
+      name: "VnExpress Sức khỏe"
+      url: "https://vnexpress.net/rss/suc-khoe.rss"
+    - id: "tuoitre-nhip-song-so"
+      name: "Tuổi Trẻ Nhịp sống số"
+      url: "https://tuoitre.vn/rss/nhip-song-so.rss"
+    - id: "tuoitre-giao-duc"
+      name: "Tuổi Trẻ Giáo dục"
+      url: "https://tuoitre.vn/rss/giao-duc.rss"
+
+    # ── Quốc tế (tự dịch sang tiếng Việt) ───────────────────
     - id: "hacker-news"
       name: "Hacker News"
       url: "https://hnrss.org/frontpage"
-
-    - id: "ruanyifeng"
-      name: "阮一峰的网络日志"
-      url: "http://www.ruanyifeng.com/blog/atom.xml"
-      enabled: false                  # 禁用
-      # max_age_days: 3               # 示例：推送 3 天内的文章（更新较慢的博客）
-     
-    - id: "yahoo-finance"
-      name: "雅虎财经"
-      url: "https://finance.yahoo.com/news/rssindex"
+    - id: "techcrunch-ai"
+      name: "TechCrunch AI"
+      url: "https://techcrunch.com/category/artificial-intelligence/feed/"
+    - id: "techcrunch-ecommerce"
+      name: "TechCrunch E-commerce"
+      url: "https://techcrunch.com/category/commerce/feed/"
+    - id: "theverge-ai"
+      name: "The Verge AI"
+      url: "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml"
 
     # 自定义源示例
     # - id: "custom-feed"
@@ -175,7 +201,7 @@ report:
 # 4.5 筛选策略
 # ===============================================================
 filter:
-  method: "keyword"                     # 筛选方式（二选一）
+  method: "ai"                          # 筛选方式（二选一）  [OpenMontage: dùng AI để lọc theo chủ đề trong ai_interests.txt; đổi về "keyword" nếu không có AI key]
                                        # keyword = 关键词匹配，不调用 AI，不消耗 token，但规则固定
                                        #           词组定义在 config/frequency_words.txt
                                        # ai = AI 智能分类，更灵活但每次运行消耗 token
@@ -415,7 +441,7 @@ ai_analysis:
   enabled: true                     # 是否启用 AI 分析（true=启用, false=关闭）—— 总开关
                                     # 开启 schedule 后此项仍为总开关：false=永远不分析，true=由调度控制
 
-  language: "Chinese"               # 分析报告语言（如 "English", "Korean", "法语"）
+  language: "Vietnamese"            # 分析报告语言（如 "English", "Korean", "法语"）
   prompt_file: "ai_analysis_prompt.txt"   # 提示词文件（相对于 config 目录）
 
   mode: "follow_report"             # AI 分析模式（可独立于 report.mode）
@@ -425,7 +451,7 @@ ai_analysis:
   max_news_for_analysis: 150        # 参与分析的新闻数量上限（控制 token 成本的关键项）
                                     # 热榜优先占用配额，RSS 用剩余配额，独立展示区不受此限制
 
-  include_rss: false                # 是否包含 RSS 内容进行分析（true=包含, false=不包含）
+  include_rss: true                 # 是否包含 RSS 内容进行分析（true=包含, false=不包含）
   include_standalone: true          # 是否纳入独立展示区数据（true=纳入, false=不纳入）
 
   include_rank_timeline: true       # 排名时间线详细程度
@@ -442,7 +468,7 @@ ai_analysis:
 # ===============================================================
 ai_translation:
   enabled: true                     # 是否启用翻译功能（true=启用, false=关闭）
-  language: "中文"                   # 翻译目标语言（如 "English", "Korean", "法语"）
+  language: "Tiếng Việt"             # 翻译目标语言（如 "English", "Korean", "法语"）
   prompt_file: "ai_translation_prompt.txt"   # 提示词文件（相对于 config 目录）
 
   batch_size: 100                   # 每批发送给 AI 的标题数，超过此数量自动分批
@@ -450,7 +476,7 @@ ai_translation:
 
   # 翻译范围（display.regions 关闭的区域即使开启也不会翻译）
   scope:
-    hotlist: false                  # 翻译热榜标题（true=翻译, false=不翻译）
+    hotlist: true                   # 翻译热榜标题（true=翻译, false=不翻译）
     rss: true                       # 翻译 RSS 标题（true=翻译, false=不翻译）
     standalone: true                # 翻译独立展示区标题（true=翻译, false=不翻译）
 
