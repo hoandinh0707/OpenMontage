@@ -1,0 +1,113 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trendradar
+spec:
+  # Single writer: SQLite on a ReadWriteOnce volume. Do not scale above 1.
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: trendradar
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: trendradar
+    spec:
+      securityContext:
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        # Crawler (supercronic, every CRON_SCHEDULE) + static dashboard on :8080
+        # served from /app/output by the image's entrypoint.
+        - name: trendradar
+          image: wantcat/trendradar
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: trendradar-env
+            - secretRef:
+                name: trendradar-secrets
+          ports:
+            - name: http
+              containerPort: 8080
+          volumeMounts:
+            - name: config
+              mountPath: /app/config
+              readOnly: true
+            - name: output
+              mountPath: /app/output
+          startupProbe:
+            # IMMEDIATE_RUN=true crawls once before the web server starts.
+            tcpSocket:
+              port: http
+            periodSeconds: 10
+            failureThreshold: 60
+          readinessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 15
+          livenessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 30
+            failureThreshold: 4
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+
+        # MCP server (HTTP transport) reading the same output volume.
+        # Lets AI clients / OpenMontage agents query trends via MCP on :3333.
+        - name: mcp
+          image: wantcat/trendradar-mcp
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: trendradar-env
+          ports:
+            - name: mcp
+              containerPort: 3333
+          volumeMounts:
+            - name: config
+              mountPath: /app/config
+              readOnly: true
+            - name: output
+              mountPath: /app/output
+          readinessProbe:
+            tcpSocket:
+              port: mcp
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 20m
+              memory: 96Mi
+            limits:
+              memory: 384Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+
+      volumes:
+        - name: config
+          projected:
+            sources:
+              - configMap:
+                  name: trendradar-config
+              - configMap:
+                  name: trendradar-config-ai-filter
+                  items:
+                    - key: extract_prompt.txt
+                      path: ai_filter/extract_prompt.txt
+                    - key: prompt.txt
+                      path: ai_filter/prompt.txt
+                    - key: update_tags_prompt.txt
+                      path: ai_filter/update_tags_prompt.txt
+        - name: output
+          persistentVolumeClaim:
+            claimName: trendradar-output

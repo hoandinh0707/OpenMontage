@@ -1,0 +1,55 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: trendradar
+
+labels:
+  - pairs:
+      app.kubernetes.io/name: trendradar
+      app.kubernetes.io/part-of: openmontage
+    includeSelectors: true
+
+resources:
+  - namespace.yaml
+  - pvc.yaml
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+
+images:
+  - name: wantcat/trendradar
+    newTag: "6.11.0"
+  - name: wantcat/trendradar-mcp
+    newTag: "4.1.1"
+
+configMapGenerator:
+  # Mounted at /app/config (read-only). Edit the files under ./config and re-apply;
+  # the hash suffix triggers a rolling restart automatically.
+  - name: trendradar-config
+    files:
+      - config/config.yaml
+      - config/frequency_words.txt
+      - config/timeline.yaml
+      - config/ai_analysis_prompt.txt
+      - config/ai_interests.txt
+      - config/ai_translation_prompt.txt
+  - name: trendradar-config-ai-filter
+    files:
+      - config/ai_filter/extract_prompt.txt
+      - config/ai_filter/prompt.txt
+      - config/ai_filter/update_tags_prompt.txt
+  - name: trendradar-env
+    literals:
+      - TZ=Asia/Ho_Chi_Minh
+      - WEBSERVER_PORT=8080
+      - RUN_MODE=cron
+      - CRON_SCHEDULE=*/30 * * * *
+      - IMMEDIATE_RUN=true
+      - MCP_PORT=3333
+
+secretGenerator:
+  # Notification webhooks, AI keys and S3 credentials. Copy secret.env.example
+  # to secret.env (git-ignored), fill in only what you use, then apply.
+  - name: trendradar-secrets
+    envs:
+      - secret.env

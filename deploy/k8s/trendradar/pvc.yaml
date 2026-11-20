@@ -1,0 +1,14 @@
+# Holds /app/output: the SQLite DB, TXT snapshots and the generated HTML dashboard.
+# Shared by the crawler/dashboard container and the MCP sidecar in the same pod,
+# so ReadWriteOnce is enough.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: trendradar-output
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  # storageClassName: standard
